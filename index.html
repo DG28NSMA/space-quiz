@@ -363,16 +363,15 @@
     .result-emoji { display: block; margin-bottom: 14px; font-size: 64px; animation: float 2.8s ease-in-out infinite; }
     .result h2 { margin: 0; font-size: 30px; letter-spacing: -.04em; }
     .result p { margin: 10px auto 22px; max-width: 360px; color: var(--muted); line-height: 1.6; }
-    .result-score {
+    .result-score, .result-best {
       display: inline-block;
-      margin-bottom: 23px;
       padding: 10px 16px;
       border-radius: 999px;
-      color: var(--accent);
-      background: var(--accent-soft);
       font-size: 15px;
       font-weight: 850;
     }
+    .result-score { margin-bottom: 10px; color: var(--accent); background: var(--accent-soft); }
+    .result-best { display: table; margin: 0 auto 23px; color: var(--muted); background: var(--card-solid); }
 
     .footer-note { margin: 17px 0 0; color: var(--muted); text-align: center; font-size: 12px; }
 
@@ -442,6 +441,20 @@
 
     let currentQuestion = 0;
     let score = 0;
+    const bestScoreStorageKey = "orbit-quiz-best-score";
+    function loadBestScore() {
+      try {
+        const storedScore = localStorage.getItem(bestScoreStorageKey);
+        const parsedScore = Number(storedScore);
+        return storedScore !== null && Number.isInteger(parsedScore) && parsedScore >= 0 && parsedScore <= questions.length
+          ? parsedScore
+          : 0;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    let bestScore = loadBestScore();
     let answered = false;
     const content = document.getElementById("quizContent");
     const scoreEl = document.getElementById("score");
@@ -522,6 +535,9 @@
 
     function showResult() {
       updateProgress();
+      bestScore = Math.max(bestScore, score);
+      try { localStorage.setItem(bestScoreStorageKey, String(bestScore)); } catch (error) { /* Best score remains available for this page visit. */ }
+
       const percent = score / questions.length;
       const result = percent === 1
         ? { emoji: "🏆", title: "Out of this world!", message: "A perfect mission! You really know your way around the cosmos." }
@@ -535,7 +551,8 @@
           <span class="result-emoji" aria-hidden="true">${result.emoji}</span>
           <h2>${result.title}</h2>
           <p>${result.message}</p>
-          <div class="result-score">⭐ You scored ${score} out of ${questions.length}</div><br>
+          <div class="result-score">⭐ You scored ${score} out of ${questions.length}</div>
+          <div class="result-best">🏅 Personal best: ${bestScore} out of ${questions.length}</div>
           <button class="next-button" id="restartButton" type="button">Play again <span aria-hidden="true">↻</span></button>
         </div>`;
       document.getElementById("restartButton").addEventListener("click", restart);
