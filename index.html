@@ -279,7 +279,7 @@
 
     .answer:disabled { cursor: default; }
 
-    .answer-letter {
+    .answer-number {
       display: grid;
       width: 28px;
       height: 28px;
@@ -306,7 +306,7 @@
       animation: wobble .42s ease both;
     }
 
-    .answer.correct .answer-letter, .answer.incorrect .answer-letter { color: inherit; background: rgba(255, 255, 255, .48); }
+    .answer.correct .answer-number, .answer.incorrect .answer-number { color: inherit; background: rgba(255, 255, 255, .48); }
 
     .feedback {
       display: flex;
@@ -459,13 +459,13 @@
           <div class="answers" role="group" aria-labelledby="questionText">
             ${item.answers.map((answer, index) => `
               <button class="answer" type="button" data-index="${index}">
-                <span class="answer-letter">${String.fromCharCode(65 + index)}</span>${answer}
+                <span class="answer-number" aria-hidden="true">${index + 1}</span>${answer}
               </button>`).join("")}
           </div>
           <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
         </div>
         <div class="card-foot">
-          <span class="hint" id="hint">Choose the answer you think is right!</span>
+          <span class="hint" id="hint">Choose an answer or press 1–4.</span>
           <button class="next-button" id="nextButton" type="button" disabled>
             ${currentQuestion === questions.length - 1 ? "See my score" : "Next question"} <span aria-hidden="true">→</span>
           </button>
@@ -502,6 +502,11 @@
       document.getElementById("nextButton").disabled = false;
       updateProgress();
     }
+
+    document.addEventListener("keydown", event => {
+      if (answered || !/^[1-4]$/.test(event.key)) return;
+      selectAnswer(Number(event.key) - 1);
+    });
 
     function updateProgress() {
       const completed = currentQuestion + (answered ? 1 : 0);
